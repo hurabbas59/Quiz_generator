@@ -1,0 +1,2 @@
+from prompts.generation_prompts import GenerationPrompts
+from prompts.ocr_prompts import OCRPrompts

@@ -1,0 +1,52 @@
+# Environment variables
+.env
+myenv/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Vector DB
+chroma_db/
+*.index
+
+# Uploads and temporary files
+uploads/
+temp/
+*.pdf
+*.jpg
+*.png
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Google credentials
+credentials.json
+token.json
+
+# Logs
+*.log
+
