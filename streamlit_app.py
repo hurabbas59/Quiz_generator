@@ -14,12 +14,14 @@ if "result" not in st.session_state:
     st.session_state["result"] = None
 if "ocr_result" not in st.session_state:
     st.session_state["ocr_result"] = None
+if "checking_result" not in st.session_state:
+    st.session_state["checking_result"] = None
 
 # Main title
 st.title("📝 Quiz & Assignment Generator")
 
 # Create tabs for different features
-tab1, tab2 = st.tabs(["🎯 Generate Quiz/Assignment", "📷 OCR - Extract Answers"])
+tab1, tab2, tab3 = st.tabs(["🎯 Generate Quiz/Assignment", "📷 OCR - Extract Answers", "✅ Check Papers"])
 
 # ============== TAB 1: QUIZ GENERATION ==============
 with tab1:
@@ -407,6 +409,253 @@ with tab2:
                 st.warning("No files data found in result")
         else:
             st.info("Upload answer sheets or provide a Google Drive link to extract answers.")
+
+
+# ============== TAB 3: PAPER CHECKING ==============
+with tab3:
+    st.markdown("Grade student papers against an answer key using AI semantic comparison.")
+    st.info("💡 **How it works:** Upload answer key + student papers → AI grades semantically (meaning-based, not word-for-word) → Download Excel results")
+    
+    check_col1, check_col2 = st.columns([1, 2])
+    
+    with check_col1:
+        st.subheader("📤 Upload Files")
+        
+        # Answer key upload
+        st.markdown("**1️⃣ Answer Key**")
+        answer_key_file = st.file_uploader(
+            "Upload Answer Key (PDF/DOCX)",
+            type=["pdf", "docx", "doc"],
+            key="answer_key"
+        )
+        
+        st.markdown("---")
+        
+        # Method selection
+        check_method = st.radio(
+            "**2️⃣ Student Papers Source:**",
+            ["Upload Files", "Google Drive Link"],
+            key="check_method"
+        )
+        
+        if check_method == "Upload Files":
+            student_papers = st.file_uploader(
+                "Upload Student Papers (PDF)",
+                type=["pdf"],
+                accept_multiple_files=True,
+                key="student_papers"
+            )
+            
+            if st.button("🔍 Check Papers", type="primary", use_container_width=True, key="check_upload_btn"):
+                if not answer_key_file:
+                    st.error("Please upload an answer key file.")
+                elif not student_papers:
+                    st.error("Please upload at least one student paper.")
+                else:
+                    with st.spinner("Processing answer key and grading papers... This may take a few minutes."):
+                        try:
+                            # Prepare files
+                            files = [
+                                ("answer_key", (answer_key_file.name, answer_key_file.getvalue(), answer_key_file.type))
+                            ]
+                            
+                            # Add student papers
+                            for paper in student_papers:
+                                files.append(("student_papers", (paper.name, paper.getvalue(), paper.type)))
+                            
+                            # Send request
+                            response = requests.post(
+                                f"{API_URL}/check-papers/upload",
+                                files=files,
+                                timeout=600  # 10 minutes for multiple papers
+                            )
+                            
+                            result = response.json()
+                            
+                            if result.get("success"):
+                                st.success(f"✅ Graded {result.get('successful', 0)} out of {result.get('total_students', 0)} papers successfully!")
+                                st.session_state["checking_result"] = result
+                            else:
+                                st.error(f"Error: {result.get('error', 'Unknown error')}")
+                                
+                        except requests.exceptions.ConnectionError:
+                            st.error("Cannot connect to API. Make sure FastAPI is running on port 8004.")
+                        except Exception as e:
+                            st.error(f"Error: {str(e)}")
+        
+        else:  # Google Drive
+            drive_url = st.text_input(
+                "Google Drive Link:",
+                placeholder="https://drive.google.com/drive/folders/...",
+                key="check_drive_url"
+            )
+            
+            if st.button("🔍 Check Papers from Drive", type="primary", use_container_width=True, key="check_drive_btn"):
+                if not answer_key_file:
+                    st.error("Please upload an answer key file.")
+                elif not drive_url:
+                    st.error("Please enter a Google Drive link.")
+                else:
+                    with st.spinner("Downloading from Google Drive and grading papers... This may take a while."):
+                        try:
+                            # Prepare answer key file
+                            files = [
+                                ("answer_key", (answer_key_file.name, answer_key_file.getvalue(), answer_key_file.type))
+                            ]
+                            
+                            data = {"drive_url": drive_url}
+                            
+                            # Send request
+                            response = requests.post(
+                                f"{API_URL}/check-papers/drive",
+                                files=files,
+                                data=data,
+                                timeout=900  # 15 minutes for large folders
+                            )
+                            
+                            result = response.json()
+                            
+                            if result.get("success"):
+                                st.success(f"✅ Graded {result.get('successful', 0)} out of {result.get('total_students', 0)} papers successfully!")
+                                st.session_state["checking_result"] = result
+                            else:
+                                st.error(f"Error: {result.get('error', 'Unknown error')}")
+                                
+                        except requests.exceptions.ConnectionError:
+                            st.error("Cannot connect to API. Make sure FastAPI is running on port 8004.")
+                        except Exception as e:
+                            st.error(f"Error: {str(e)}")
+    
+    with check_col2:
+        st.subheader("📊 Grading Results")
+        
+        if st.session_state["checking_result"]:
+            result = st.session_state["checking_result"]
+            
+            # Summary stats
+            st.markdown("### 📈 Summary")
+            summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
+            
+            with summary_col1:
+                st.metric("Total Students", result.get('total_students', 0))
+            with summary_col2:
+                st.metric("Successful", result.get('successful', 0), delta=None)
+            with summary_col3:
+                st.metric("Failed", result.get('failed', 0), delta=None)
+            with summary_col4:
+                assessment_type = result.get('assessment_type', 'assignment')
+                st.metric("Type", assessment_type.title())
+            
+            # Answer key info
+            answer_key_info = result.get('answer_key_info', {})
+            if answer_key_info:
+                st.markdown(f"**Answer Key:** {answer_key_info.get('total_questions', 0)} questions, {answer_key_info.get('total_marks', 0)} total marks")
+            
+            st.markdown("---")
+            
+            # Download Excel button
+            st.markdown("### 📥 Download Results")
+            try:
+                excel_response = requests.post(
+                    f"{API_URL}/check-papers/download-excel",
+                    json={"checking_results": result},
+                    timeout=120
+                )
+                if excel_response.status_code == 200:
+                    st.download_button(
+                        "📊 Download Excel Spreadsheet",
+                        data=excel_response.content,
+                        file_name="grading_results.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True,
+                        type="primary",
+                        key="dl_excel"
+                    )
+                    st.caption("Excel includes: Name, Roll Number, marks per answer, and total marks")
+                else:
+                    st.error("Failed to generate Excel file")
+            except Exception as e:
+                st.error(f"Excel download error: {e}")
+            
+            st.markdown("---")
+            
+            # Results tabs
+            result_tab1, result_tab2 = st.tabs(["📋 Student Results", "📊 Raw JSON"])
+            
+            with result_tab1:
+                results = result.get('results', [])
+                
+                if results:
+                    for idx, student_result in enumerate(results, 1):
+                        # Student card
+                        with st.expander(
+                            f"👤 {student_result.get('student_name', 'Unknown')} - {student_result.get('roll_number', 'Unknown')} | "
+                            f"Score: {student_result.get('total_obtained', 0)}/{student_result.get('total_max', 0)}",
+                            expanded=False
+                        ):
+                            # Student info
+                            col_info1, col_info2 = st.columns(2)
+                            with col_info1:
+                                st.markdown(f"**File:** {student_result.get('filename', 'Unknown')}")
+                                st.markdown(f"**Answers Extracted:** {student_result.get('answers_extracted', 0)}")
+                            with col_info2:
+                                st.markdown(f"**Total Obtained:** {student_result.get('total_obtained', 0)}")
+                                st.markdown(f"**Total Max:** {student_result.get('total_max', 0)}")
+                            
+                            # Error case
+                            if not student_result.get('success'):
+                                st.error(f"❌ Error: {student_result.get('error', 'Unknown error')}")
+                                continue
+                            
+                            # Grading details
+                            grading = student_result.get('grading', {})
+                            evaluations = grading.get('evaluations', [])
+                            
+                            if evaluations:
+                                st.markdown("#### 📝 Answer-by-Answer Breakdown")
+                                
+                                for eval_item in evaluations:
+                                    q_num = eval_item.get('question_number', '?')
+                                    obtained = eval_item.get('obtained_marks', 0)
+                                    max_marks = eval_item.get('max_marks', 0)
+                                    feedback = eval_item.get('feedback', '')
+                                    is_correct = eval_item.get('is_correct')
+                                    
+                                    # Color code based on performance
+                                    percentage = (obtained / max_marks * 100) if max_marks > 0 else 0
+                                    
+                                    if percentage == 100:
+                                        status_icon = "✅"
+                                        status_color = "green"
+                                    elif percentage >= 50:
+                                        status_icon = "⚠️"
+                                        status_color = "orange"
+                                    else:
+                                        status_icon = "❌"
+                                        status_color = "red"
+                                    
+                                    st.markdown(f"**{status_icon} Question {q_num}:** {obtained}/{max_marks} marks ({percentage:.0f}%)")
+                                    
+                                    if feedback:
+                                        st.caption(f"💬 {feedback}")
+                                    
+                                    if is_correct is not None:
+                                        st.caption(f"Correct: {'✅ Yes' if is_correct else '❌ No'}")
+                                    
+                                    st.markdown("---")
+                            
+                            # Overall feedback
+                            overall_feedback = grading.get('overall_feedback', '')
+                            if overall_feedback:
+                                st.markdown("#### 💬 Overall Feedback")
+                                st.info(overall_feedback)
+                else:
+                    st.warning("No results found")
+            
+            with result_tab2:
+                st.json(result)
+        else:
+            st.info("👆 Upload answer key and student papers, then click 'Check Papers' to see results here.")
 
 
 # ============== SIDEBAR: INDEX MANAGEMENT ==============

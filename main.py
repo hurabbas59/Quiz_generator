@@ -7,11 +7,15 @@ from models import (
     QuizConfig, 
     AssignmentConfig,
     DownloadRequest,
-    OCRDownloadRequest
+    OCRDownloadRequest,
+    CheckingPapersResponse,
+    CheckPapersRequest,
+    ExcelDownloadRequest
 )
 from services.generation_service import GenerationService
 from services.document_service import DocumentService
 from services.ocr_service import OCRService
+from services.checking_papers_service import CheckingPapersService
 from vectordb.vector_ops import PineconeVectorDB
 from utils.logger import log_step, log_success, log_error, logger
 
@@ -200,6 +204,89 @@ async def download_ocr_results(request: OCRDownloadRequest):
         )
     except Exception as e:
         log_error("OCR download failed", e)
+        return {"success": False, "error": str(e)}
+
+
+# ============== PAPER CHECKING ENDPOINTS ==============
+
+@app.post("/check-papers/upload", response_model=CheckingPapersResponse)
+async def check_papers_from_uploads(
+    answer_key: UploadFile = File(..., description="Answer key PDF/DOCX"),
+    student_papers: List[UploadFile] = File(..., description="Student papers to grade")
+):
+    """Check/grade student papers against an answer key (file uploads).
+    
+    - Upload the answer key (PDF/DOCX with correct answers)
+    - Upload multiple student papers (PDFs with handwritten answers)
+    - Returns grading results for each student with marks breakdown
+    """
+    log_step("API: /check-papers/upload", f"Answer key + {len(student_papers)} student papers")
+    
+    try:
+        checker = CheckingPapersService()
+        result = await checker.check_papers_from_uploads(answer_key, student_papers)
+        log_success(f"Checked {result['total_students']} papers")
+        return CheckingPapersResponse(**result)
+    except Exception as e:
+        log_error("Paper checking failed", e)
+        return CheckingPapersResponse(success=False, error=str(e))
+
+
+@app.post("/check-papers/drive", response_model=CheckingPapersResponse)
+async def check_papers_from_drive(
+    answer_key: UploadFile = File(..., description="Answer key PDF/DOCX"),
+    drive_url: str = Form(..., description="Google Drive URL with student papers")
+):
+    """Check/grade student papers from Google Drive against an answer key.
+    
+    - Upload the answer key (PDF/DOCX with correct answers)
+    - Provide Google Drive folder URL containing student papers
+    - Returns grading results for each student with marks breakdown
+    """
+    log_step("API: /check-papers/drive", f"Drive URL: {drive_url[:50]}...")
+    
+    try:
+        checker = CheckingPapersService()
+        
+        # First process the answer key
+        answer_key_result = await checker.process_answer_key(answer_key)
+        if not answer_key_result.get('success'):
+            return CheckingPapersResponse(success=False, error="Failed to process answer key")
+        
+        # Then check papers from drive
+        result = checker.check_papers_from_drive(
+            answer_key_result['raw_text'],
+            drive_url
+        )
+        
+        log_success(f"Checked {result['total_students']} papers")
+        return CheckingPapersResponse(**result)
+    except Exception as e:
+        log_error("Paper checking (Drive) failed", e)
+        return CheckingPapersResponse(success=False, error=str(e))
+
+
+@app.post("/check-papers/download-excel")
+async def download_grading_excel(request: ExcelDownloadRequest):
+    """Download grading results as Excel spreadsheet.
+    
+    Pass the full results from /check-papers/* endpoint to generate Excel.
+    Excel includes: Name, Roll Number, individual answer marks, total marks.
+    """
+    log_step("API: /check-papers/download-excel", f"Generating Excel")
+    
+    try:
+        checker = CheckingPapersService()
+        excel_bytes = checker.generate_results_excel(request.checking_results)
+        log_success("Excel generated")
+        
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=grading_results.xlsx"}
+        )
+    except Exception as e:
+        log_error("Excel generation failed", e)
         return {"success": False, "error": str(e)}
 
 

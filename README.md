@@ -58,6 +58,9 @@ The API will be available at: **http://localhost:8004**
 | `/ocr/extract` | POST | Extract answers from uploaded files |
 | `/ocr/extract-url` | POST | Extract answers from Google Drive URL |
 | `/ocr/download` | POST | Download OCR results as ZIP of Word docs |
+| `/check-papers/upload` | POST | Grade student papers (file uploads) |
+| `/check-papers/drive` | POST | Grade student papers (Google Drive) |
+| `/check-papers/download-excel` | POST | Download grading results as Excel |
 | `/indexes` | GET | List all Pinecone indexes |
 | `/indexes/{name}` | DELETE | Delete a specific index |
 | `/health` | GET | Health check |
@@ -270,7 +273,172 @@ Same structure as `/ocr/extract`
 
 ---
 
-### 4️⃣ Download Endpoints
+### 4️⃣ Paper Checking Service (`POST /check-papers/*`)
+
+**Grades student papers against an answer key using semantic comparison (not word-by-word matching).**
+
+The service:
+- Extracts student name & roll number from PDFs using vision
+- Compares student answers with answer key semantically
+- Awards marks based on understanding/meaning
+- Generates Excel sheet with results
+
+---
+
+#### 4.1 Check Papers - File Upload (`POST /check-papers/upload`)
+
+Grade papers by uploading files directly.
+
+##### Request (Form Data + Files)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `answer_key` | File | **required** | The answer key PDF/DOCX with correct answers |
+| `student_papers` | File[] | **required** | Student papers (PDFs) to grade |
+
+##### Example Request (JavaScript/Fetch)
+```javascript
+const formData = new FormData();
+formData.append('answer_key', answerKeyFile);
+formData.append('student_papers', studentFile1);
+formData.append('student_papers', studentFile2);
+formData.append('student_papers', studentFile3);
+
+const response = await fetch('http://localhost:8004/check-papers/upload', {
+  method: 'POST',
+  body: formData
+});
+```
+
+##### Response
+```json
+{
+  "success": true,
+  "assessment_type": "assignment",
+  "total_students": 3,
+  "successful": 3,
+  "failed": 0,
+  "answer_key_info": {
+    "total_questions": 5,
+    "total_marks": 50
+  },
+  "results": [
+    {
+      "filename": "student1.pdf",
+      "student_name": "Ali Khan",
+      "roll_number": "2021-CS-101",
+      "answers_extracted": 5,
+      "total_obtained": 42,
+      "total_max": 50,
+      "grading": {
+        "evaluations": [
+          {
+            "question_number": 1,
+            "max_marks": 10,
+            "obtained_marks": 8,
+            "feedback": "Good explanation but missed one key point"
+          },
+          {
+            "question_number": 2,
+            "max_marks": 10,
+            "obtained_marks": 10,
+            "feedback": "Excellent answer"
+          }
+        ],
+        "total_obtained": 42,
+        "total_max": 50,
+        "overall_feedback": "Good understanding of concepts"
+      },
+      "success": true
+    }
+  ]
+}
+```
+
+---
+
+#### 4.2 Check Papers - Google Drive (`POST /check-papers/drive`)
+
+Grade papers from a Google Drive folder.
+
+##### Request (Form Data)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `answer_key` | File | **required** | The answer key PDF/DOCX |
+| `drive_url` | string | **required** | Google Drive folder URL with student papers |
+
+##### Example Request
+```javascript
+const formData = new FormData();
+formData.append('answer_key', answerKeyFile);
+formData.append('drive_url', 'https://drive.google.com/drive/folders/xxxxx');
+
+const response = await fetch('http://localhost:8004/check-papers/drive', {
+  method: 'POST',
+  body: formData
+});
+```
+
+##### Response
+Same structure as `/check-papers/upload`
+
+---
+
+#### 4.3 Download Grading Excel (`POST /check-papers/download-excel`)
+
+Download grading results as Excel spreadsheet.
+
+##### Request (JSON Body)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `checking_results` | object | **required** | Full response from `/check-papers/*` endpoint |
+
+##### Example Request
+```javascript
+// First, get the checking results
+const checkResponse = await fetch('http://localhost:8004/check-papers/upload', {
+  method: 'POST',
+  body: formData
+});
+const checkingResults = await checkResponse.json();
+
+// Then download Excel
+const excelResponse = await fetch('http://localhost:8004/check-papers/download-excel', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    checking_results: checkingResults
+  })
+});
+
+// Download the Excel file
+const blob = await excelResponse.blob();
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'grading_results.xlsx';
+a.click();
+```
+
+##### Excel Output Format
+
+**For Assignment:**
+| S.No | Name | Roll Number | A1 | A2 | A3 | A4 | A5 | Total Obtained / Total |
+|------|------|-------------|----|----|----|----|----|-----------------------|
+| 1 | Ali Khan | 2021-CS-101 | 8/10 | 10/10 | 7/10 | 9/10 | 8/10 | 42 / 50 |
+| 2 | Sara Ahmed | 2021-CS-102 | 9/10 | 8/10 | 10/10 | 8/10 | 9/10 | 44 / 50 |
+
+**For Quiz:**
+| S.No | Name | Roll Number | Obtained / Total |
+|------|------|-------------|-----------------|
+| 1 | Ali Khan | 2021-CS-101 | 8 / 10 |
+| 2 | Sara Ahmed | 2021-CS-102 | 9 / 10 |
+
+---
+
+### 5️⃣ Other Download Endpoints
 
 #### Download Quiz (`POST /download/quiz`)
 ```javascript
@@ -344,6 +512,14 @@ curl -X POST http://localhost:8004/generate \
 ```bash
 curl -X POST http://localhost:8004/ocr/extract \
   -F "files=@student_answers.pdf"
+```
+
+### Check Papers
+```bash
+curl -X POST http://localhost:8004/check-papers/upload \
+  -F "answer_key=@answer_key.pdf" \
+  -F "student_papers=@student1.pdf" \
+  -F "student_papers=@student2.pdf"
 ```
 
 ---
