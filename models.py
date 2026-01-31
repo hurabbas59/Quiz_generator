@@ -7,11 +7,13 @@ class QuizConfig(BaseModel):
     fill_blanks_count: int = 0
     true_false_count: int = 0
     difficulty: str = "medium"  # easy, medium, hard
+    topic_prompt: Optional[str] = None
 
 
 class AssignmentConfig(BaseModel):
     num_questions: int = 5
     difficulty: str = "medium"  # easy, medium, hard
+    topic_prompt: Optional[str] = None
 
 
 class GenerationRequest(BaseModel):

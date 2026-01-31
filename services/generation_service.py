@@ -60,10 +60,13 @@ class GenerationService:
         
         return len(chunks)
     
-    def _get_content(self, k: int = 10) -> str:
+    def _get_content(self, query: str = None, k: int = 10) -> str:
         """Retrieve content from vector DB."""
+        search_query = "Generate Questions Covering these topics: " + query or "Generate questions covering all topics"
+        log_debug(f"Retrieving content with query: {search_query}")
+        
         docs = self.vector_db.similarity_search(
-            query="Generate questions covering all topics",
+            query=search_query,
             k=k,
             namespace=self.namespace
         )
@@ -83,14 +86,15 @@ class GenerationService:
     def generate_quiz(self, config: QuizConfig, quiz_number: int) -> Quiz:
         """Generate a single quiz."""
         difficulty = getattr(config, 'difficulty', 'medium')
-        log_step(f"Generating Quiz {quiz_number}", f"Difficulty: {difficulty}")
+        topic_prompt = getattr(config, 'topic_prompt', None)
+        log_step(f"Generating Quiz {quiz_number}", f"Difficulty: {difficulty}, Topic: {topic_prompt or 'All'}")
         
         total_questions = config.mcq_count + config.fill_blanks_count + config.true_false_count
         if total_questions == 0:
             total_questions = 10
             config.mcq_count, config.fill_blanks_count, config.true_false_count = 5, 3, 2
         
-        content = self._get_content(k=total_questions * 2)
+        content = self._get_content(query=topic_prompt, k=total_questions * 2)
         
         # Build question types string
         question_types = []
@@ -125,9 +129,10 @@ class GenerationService:
     def generate_assignment(self, config: AssignmentConfig, assignment_number: int) -> Assignment:
         """Generate a single assignment."""
         difficulty = config.difficulty
-        log_step(f"Generating Assignment {assignment_number}", f"Difficulty: {difficulty}")
+        topic_prompt = getattr(config, 'topic_prompt', None)
+        log_step(f"Generating Assignment {assignment_number}", f"Difficulty: {difficulty}, Topic: {topic_prompt or 'All'}")
         
-        content = self._get_content(k=config.num_questions * 3)
+        content = self._get_content(query=topic_prompt, k=config.num_questions * 3)
         
         prompt = GenerationPrompts.ASSIGNMENT.format(
             num_questions=config.num_questions,

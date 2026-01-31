@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import Response
-from typing import List
+from typing import List, Optional
 
 from models import (
     GenerationResponse, 
@@ -33,8 +33,10 @@ async def generate_quiz_and_assignments(
     fill_blanks_count: int = Form(default=3),
     true_false_count: int = Form(default=2),
     quiz_difficulty: str = Form(default="medium"),
+    quiz_topic: Optional[str] = Form(default=None),
     assignment_questions: int = Form(default=5),
     assignment_difficulty: str = Form(default="medium"),
+    assignment_topic: Optional[str] = Form(default=None),
     delete_index_after: bool = Form(default=True)
 ):
     """Generate quizzes and assignments from uploaded documents."""
@@ -51,12 +53,14 @@ async def generate_quiz_and_assignments(
             mcq_count=mcq_count,
             fill_blanks_count=fill_blanks_count,
             true_false_count=true_false_count,
-            difficulty=quiz_difficulty
+            difficulty=quiz_difficulty,
+            topic_prompt=quiz_topic
         )
         
         assignment_config = AssignmentConfig(
             num_questions=assignment_questions,
-            difficulty=assignment_difficulty
+            difficulty=assignment_difficulty,
+            topic_prompt=assignment_topic
         )
         
         log_step("Generating content", f"Quizzes: {num_quizzes}, Assignments: {num_assignments}")
