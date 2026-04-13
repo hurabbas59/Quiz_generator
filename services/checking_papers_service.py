@@ -228,67 +228,65 @@ class CheckingPapersService:
             return {"student_name": "Unknown", "roll_number": "Unknown", "error": str(e)}
     
     # =========================================================================
-    # STEP 3: GRADE ANSWERS (The core grading logic)
+    # STEP 3: GRADE ANSWERS (unified exam pattern)
     # =========================================================================
-    
-    def _grade_answers(self, answer_key: Dict, student_answers: List[Dict], assessment_type: str) -> Dict:
-        """
-        Grade student answers against the answer key.
-        
-        THIS IS THE CORE GRADING FUNCTION!
-        
-        HOW IT WORKS:
-        1. Takes the correct answers (answer_key)
-        2. Takes what student wrote (student_answers)
-        3. Sends both to AI for SEMANTIC comparison
-        4. AI compares MEANING, not exact words
-        5. AI gives marks based on understanding
-        
-        SEMANTIC GRADING EXAMPLES:
-        - "H2O" vs "water" → Both correct (same meaning)
-        - "CPU processes data" vs "The central processing unit handles data" → Both correct
-        - Partial understanding → Partial marks
-        
-        Args:
-            answer_key: The parsed answer key with correct answers
-            student_answers: List of student's answers extracted by OCR
-            assessment_type: "quiz" or "assignment"
-            
-        Returns:
-            Dictionary with evaluations (marks for each answer) and totals
-        """
-        log_step("Grading Answers", f"Type: {assessment_type}")
-        
-        # Convert to JSON text for the AI prompt
+
+    def _merge_student_responses(self, answers: List[Dict], quiz_answers: List[Dict]) -> List[Dict]:
+        """Merge structured answers with objective quiz rows (same question_id wins latest objective text)."""
+        out_map: Dict[str, Dict] = {}
+
+        def _norm_key(raw) -> str:
+            if raw is None:
+                return ""
+            s = str(raw).strip()
+            return s
+
+        for a in answers or []:
+            k = _norm_key(a.get('question_id', a.get('answer_number')))
+            if not k:
+                k = f"_anon_{len(out_map)}"
+            entry = dict(a)
+            entry['question_id'] = k
+            if entry.get('student_answer') is None and entry.get('content') is not None:
+                entry['student_answer'] = entry['content']
+            out_map[k] = entry
+
+        for q in quiz_answers or []:
+            k = _norm_key(q.get('question_id', q.get('question_number')))
+            if not k:
+                continue
+            text = q.get('student_answer', q.get('answer', ''))
+            if k in out_map:
+                out_map[k]['student_answer'] = text or out_map[k].get('student_answer', '')
+                if q.get('answer_type'):
+                    out_map[k]['answer_type'] = q['answer_type']
+            else:
+                out_map[k] = {
+                    'question_id': k,
+                    'student_answer': text,
+                    'answer_type': q.get('answer_type', 'mcq'),
+                    'section_id': q.get('section_id'),
+                    'section_title': q.get('section_title'),
+                }
+
+        return list(out_map.values())
+
+    def _grade_answers_unified(self, answer_key: Dict, student_answers: List[Dict]) -> Dict:
+        """Grade using one prompt that handles objective, blanks, and descriptive items."""
+        log_step("Grading Answers (unified)", f"{len(answer_key.get('questions', []))} key items")
         answer_key_text = json.dumps(answer_key.get('questions', []), indent=2)
         student_answers_text = json.dumps(student_answers, indent=2)
-        
-        # Choose the right prompt based on assessment type
-        if assessment_type == "quiz":
-            # Quiz: MCQ, True/False, Fill in blanks (usually full marks or zero)
-            prompt = CheckingPapersPrompts.GRADE_QUIZ_ANSWERS.format(
-                answer_key=answer_key_text,
-                student_answers=student_answers_text
-            )
-        else:
-            # Assignment: Long answers (can have partial marks)
-            prompt = CheckingPapersPrompts.GRADE_ASSIGNMENT_ANSWERS.format(
-                answer_key=answer_key_text,
-                student_answers=student_answers_text,
-                total_questions=len(answer_key.get('questions', []))
-            )
-        
-        # Send to AI for grading
+        prompt = CheckingPapersPrompts.GRADE_UNIFIED.format(
+            answer_key=answer_key_text,
+            student_answers=student_answers_text,
+        )
         messages = [
             {"role": "system", "content": CheckingPapersPrompts.SYSTEM},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": prompt},
         ]
-        
         response = self.llm.invoke(messages)
         grading_result = self._parse_json(response.content)
-        
-        log_success(f"Graded: {grading_result.get('total_obtained', 0)}/{grading_result.get('total_max', 0)}")
-        
+        log_success(f"Graded (unified): {grading_result.get('total_obtained', 0)}/{grading_result.get('total_max', 0)}")
         return grading_result
     
     # =========================================================================
@@ -339,10 +337,13 @@ class CheckingPapersService:
             
             # STEP 3: Extract all answers from the paper (reusing OCR service!)
             file_result = self.ocr_service._process_file(file_path, suffix)
-            student_answers = file_result.get('answers', [])
+            student_answers = self._merge_student_responses(
+                file_result.get('answers', []),
+                file_result.get('quiz_answers', []),
+            )
             
-            # STEP 4: Grade the answers
-            grading_result = self._grade_answers(answer_key, student_answers, assessment_type)
+            # STEP 4: Grade the answers (unified exam pattern)
+            grading_result = self._grade_answers_unified(answer_key, student_answers)
             
             # Return complete result for this student
             return {
@@ -602,6 +603,7 @@ class CheckingPapersService:
         
         assessment_type = checking_results.get('assessment_type', 'assignment')
         results = checking_results.get('results', [])
+        use_per_question_columns = assessment_type in ("assignment", "mixed")
         
         # Handle empty results
         if not results:
@@ -625,7 +627,7 @@ class CheckingPapersService:
         # Start with basic columns
         headers = ["S.No", "Name", "Roll Number"]
         
-        if assessment_type == "quiz":
+        if not use_per_question_columns:
             # For quiz: Just one column with total marks
             headers.append("Obtained / Total")
         else:
@@ -670,7 +672,7 @@ class CheckingPapersService:
             total_obtained = grading.get('total_obtained', 0)
             total_max = grading.get('total_max', 0)
             
-            if assessment_type == "quiz":
+            if not use_per_question_columns:
                 # QUIZ: Just show total marks in one column
                 cell = ws.cell(row=row_idx, column=4, value=f"{total_obtained} / {total_max}")
                 cell.alignment = center_align

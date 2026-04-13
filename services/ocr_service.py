@@ -169,6 +169,7 @@ class OCRService:
         log_step("Processing file", f"Type: {suffix}")
         
         all_answers = []
+        all_quiz_answers = []
         all_raw_text = []
         extraction_stats = []
         pages_processed = 0
@@ -199,6 +200,9 @@ class OCRService:
                 for answer in page_content.get('answers', []):
                     answer['page'] = page_num
                     all_answers.append(answer)
+                for qa in page_content.get('quiz_answers', []):
+                    qa['page'] = page_num
+                    all_quiz_answers.append(qa)
                 
                 # Stats
                 stats = page_content.get('extraction_stats', {})
@@ -219,6 +223,7 @@ class OCRService:
             data = self._parse_json(response)
             all_raw_text.append(data.get('raw_text', ''))
             all_answers = data.get('answers', [])
+            all_quiz_answers = data.get('quiz_answers', [])
             extraction_stats = [data.get('extraction_stats', {})]
             pages_processed = 1
         
@@ -227,36 +232,120 @@ class OCRService:
         
         # Consolidate answers
         consolidated = self._consolidate_answers(all_answers)
+        quiz_consolidated = self._consolidate_quiz_answers(all_quiz_answers)
+        consolidated = [self._normalize_answer_record(a) for a in consolidated]
+        quiz_consolidated = [self._normalize_quiz_record(q) for q in quiz_consolidated]
         
         return {
             "success": True,
             "pages_processed": pages_processed,
             "raw_text": "\n\n".join(all_raw_text),
             "answers": consolidated,
-            "quiz_answers": [],
-            "total_answers": len(consolidated),
+            "quiz_answers": quiz_consolidated,
+            "total_answers": len(consolidated) + len(quiz_consolidated),
             "extraction_stats": extraction_stats
         }
     
+    def _normalize_answer_record(self, answer: Dict) -> Dict:
+        """Ensure standard fields for downstream APIs."""
+        qid = answer.get('question_id')
+        if qid is None and answer.get('answer_number') is not None:
+            qid = str(answer.get('answer_number'))
+        if qid is None:
+            qid = 'unknown'
+        text = answer.get('student_answer')
+        if text is None:
+            text = answer.get('content', '')
+        out = {
+            'question_id': str(qid),
+            'student_answer': text,
+            'answer_type': answer.get('answer_type', 'unknown'),
+            'section_id': answer.get('section_id'),
+            'section_title': answer.get('section_title'),
+            'confidence': answer.get('confidence', 'medium'),
+            'pages': answer.get('pages', []),
+        }
+        if answer.get('page') and answer['page'] not in (out['pages'] or []):
+            out['pages'] = list(out['pages'] or []) + [answer['page']]
+        # Back-compat for older consumers
+        out['answer_number'] = out['question_id']
+        out['content'] = out['student_answer']
+        return out
+
+    def _normalize_quiz_record(self, row: Dict) -> Dict:
+        qid = row.get('question_id')
+        if qid is None and row.get('question_number') is not None:
+            qid = str(row.get('question_number'))
+        if qid is None:
+            qid = 'unknown'
+        ans = row.get('student_answer', row.get('answer', ''))
+        return {
+            'question_id': str(qid),
+            'student_answer': ans,
+            'answer_type': row.get('answer_type', 'mcq'),
+            'confidence': row.get('confidence', 'medium'),
+            'pages': row.get('pages', []),
+            'question_number': str(qid),
+            'answer': ans,
+        }
+
     def _consolidate_answers(self, answers: List[Dict]) -> List[Dict]:
         """Consolidate answers that span multiple pages."""
         grouped = {}
-        
+
+        def _key(a: Dict) -> str:
+            if a.get('question_id') is not None:
+                return str(a['question_id'])
+            if a.get('answer_number') is not None:
+                return str(a['answer_number'])
+            return 'unknown'
+
         for answer in answers:
-            num = str(answer.get('answer_number', 'unknown'))
-            if num not in grouped:
-                grouped[num] = {
-                    "answer_number": num,
-                    "content": answer.get('content', ''),
-                    "answer_type": answer.get('answer_type', 'unknown'),
-                    "pages": [answer.get('page', 1)],
-                    "confidence": answer.get('confidence', 'medium')
+            k = _key(answer)
+            text = answer.get('student_answer', answer.get('content', ''))
+            if k not in grouped:
+                grouped[k] = {
+                    'question_id': k,
+                    'student_answer': text,
+                    'answer_type': answer.get('answer_type', 'unknown'),
+                    'section_id': answer.get('section_id'),
+                    'section_title': answer.get('section_title'),
+                    'pages': [answer.get('page')] if answer.get('page') else [],
+                    'confidence': answer.get('confidence', 'medium'),
                 }
             else:
-                grouped[num]['content'] += "\n" + answer.get('content', '')
+                grouped[k]['student_answer'] += "\n" + text
                 if answer.get('page'):
-                    grouped[num]['pages'].append(answer.get('page'))
-        
+                    grouped[k]['pages'].append(answer.get('page'))
+                # Prefer higher-specificity type if later chunk refines it
+                if grouped[k].get('answer_type') == 'unknown' and answer.get('answer_type'):
+                    grouped[k]['answer_type'] = answer.get('answer_type')
+                if not grouped[k].get('section_id') and answer.get('section_id'):
+                    grouped[k]['section_id'] = answer.get('section_id')
+                if not grouped[k].get('section_title') and answer.get('section_title'):
+                    grouped[k]['section_title'] = answer.get('section_title')
+
+        return list(grouped.values())
+
+    def _consolidate_quiz_answers(self, rows: List[Dict]) -> List[Dict]:
+        grouped = {}
+        for row in rows:
+            qid = row.get('question_id') or row.get('question_number')
+            k = str(qid) if qid is not None else 'unknown'
+            text = row.get('student_answer', row.get('answer', ''))
+            if k not in grouped:
+                grouped[k] = {
+                    'question_id': k,
+                    'student_answer': text,
+                    'answer_type': row.get('answer_type', 'mcq'),
+                    'pages': [row.get('page')] if row.get('page') else [],
+                    'confidence': row.get('confidence', 'medium'),
+                }
+            else:
+                if text:
+                    grouped[k]['student_answer'] = text
+                if row.get('page'):
+                    grouped[k]['pages'].append(row.get('page'))
         return list(grouped.values())
     
     # ============== PUBLIC METHODS ==============

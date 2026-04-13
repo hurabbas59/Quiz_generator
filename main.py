@@ -10,12 +10,16 @@ from models import (
     OCRDownloadRequest,
     CheckingPapersResponse,
     CheckPapersRequest,
-    ExcelDownloadRequest
+    ExcelDownloadRequest,
+    SlideGenerationRequest,
+    SlideGenerationResponse,
+    SlidesDownloadRequest,
 )
 from services.generation_service import GenerationService
 from services.document_service import DocumentService
 from services.ocr_service import OCRService
 from services.checking_papers_service import CheckingPapersService
+from services.slide_service import SlideService
 from vectordb.vector_ops import PineconeVectorDB
 from utils.logger import log_step, log_success, log_error, logger
 
@@ -149,6 +153,57 @@ async def download_combined_document(request: DownloadRequest):
         )
     except Exception as e:
         log_error("Combined document generation failed", e)
+        return {"success": False, "error": str(e)}
+
+
+# ============== SLIDE GENERATION (DOCX handout) ==============
+
+@app.post("/slides/generate", response_model=SlideGenerationResponse)
+async def generate_slides_json(request: SlideGenerationRequest):
+    """Generate structured slide data (JSON) from a topic or prompt. Export via /slides/download."""
+    log_step("API: /slides/generate", request.topic[:80])
+    try:
+        svc = SlideService()
+        result = svc.generate_slides(
+            topic=request.topic,
+            audience=request.audience,
+            topic_style=request.topic_style,
+            target_slides=request.target_slides,
+        )
+        if not result.get("success"):
+            return SlideGenerationResponse(success=False, error=result.get("error", "Unknown error"))
+        return SlideGenerationResponse(
+            success=True,
+            deck_title=result.get("deck_title", ""),
+            subtitle=result.get("subtitle", ""),
+            topic_style=result.get("topic_style", request.topic_style),
+            slides=result.get("slides", []),
+        )
+    except Exception as e:
+        log_error("Slide generation failed", e)
+        return SlideGenerationResponse(success=False, error=str(e))
+
+
+@app.post("/slides/download")
+async def download_slides_docx(request: SlidesDownloadRequest):
+    """Build a Word document (.docx) slide handout from structured slide JSON."""
+    log_step("API: /slides/download", request.deck_title[:60])
+    try:
+        doc_bytes = DocumentService.create_slides_document(
+            deck_title=request.deck_title,
+            slides=request.slides,
+            subtitle=request.subtitle or "",
+            topic_style=request.topic_style,
+        )
+        safe_name = "".join(c for c in request.deck_title if c.isalnum() or c in (" ", "-", "_")).strip() or "slides"
+        safe_name = safe_name.replace(" ", "_")[:80]
+        return Response(
+            content=doc_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename={safe_name}_slides.docx"},
+        )
+    except Exception as e:
+        log_error("Slides DOCX failed", e)
         return {"success": False, "error": str(e)}
 
 

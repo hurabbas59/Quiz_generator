@@ -4,7 +4,7 @@ Document generation service for creating Word documents.
 from docx import Document
 from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from typing import List, Dict
+from typing import List, Dict, Optional
 import io
 import zipfile
 import os
@@ -303,21 +303,27 @@ class DocumentService:
             doc.add_heading("Answers", level=1)
             
             # Sort answers by answer number if possible
-            sorted_answers = sorted(answers, key=lambda x: str(x.get('answer_number', '0')))
+            sorted_answers = sorted(
+                answers,
+                key=lambda x: str(x.get('question_id', x.get('answer_number', '0'))),
+            )
             
             for answer in sorted_answers:
-                ans_num = answer.get('answer_number', '?')
+                qid = answer.get('question_id', answer.get('answer_number', '?'))
                 ans_type = answer.get('answer_type', 'unknown')
-                content = answer.get('content', 'No content extracted')
+                content = answer.get('student_answer', answer.get('content', 'No content extracted'))
+                sec = answer.get('section_id') or answer.get('section_title')
                 confidence = answer.get('confidence', 'N/A')
                 pages = answer.get('pages', [])
                 
                 # Answer header
-                header = doc.add_heading(f"Answer {ans_num}", level=2)
+                doc.add_heading(f"Question {qid}", level=2)
                 
                 # Metadata
                 meta = doc.add_paragraph()
                 meta.add_run(f"Type: {ans_type} | Confidence: {confidence}")
+                if sec:
+                    meta.add_run(f" | Section: {sec}")
                 if pages:
                     meta.add_run(f" | Pages: {', '.join(map(str, pages))}")
                 meta.runs[0].font.size = Pt(9)
@@ -338,13 +344,13 @@ class DocumentService:
             doc.add_heading("Quiz / MCQ Answers", level=1)
             
             for qa in quiz_answers:
-                q_num = qa.get('question_number', '?')
-                answer = qa.get('answer', 'N/A')
+                q_num = qa.get('question_id', qa.get('question_number', '?'))
+                answer = qa.get('student_answer', qa.get('answer', 'N/A'))
                 confidence = qa.get('confidence', 'N/A')
                 
                 qa_para = doc.add_paragraph()
                 qa_para.add_run(f"Question {q_num}: ").bold = True
-                qa_para.add_run(answer)
+                qa_para.add_run(str(answer))
                 qa_para.add_run(f"  (Confidence: {confidence})")
                 qa_para.runs[-1].font.size = Pt(9)
                 qa_para.runs[-1].font.italic = True
@@ -396,4 +402,75 @@ class DocumentService:
         zip_buffer.seek(0)
         log_success(f"Created ZIP with {len(files_data)} documents")
         return zip_buffer.getvalue()
+
+    @staticmethod
+    def create_slides_document(
+        deck_title: str,
+        slides: List[Dict],
+        subtitle: str = "",
+        topic_style: Optional[str] = None,
+    ) -> bytes:
+        """
+        Build a Word document that reads like slide handouts (title + bullet slides).
+
+        Args:
+            deck_title: Main deck title
+            slides: List of slide dicts (slide_index, role, title, bullets, example, speaker_notes)
+            subtitle: Optional subtitle under the title slide
+            topic_style: Optional label (technical / academic / general)
+
+        Returns:
+            .docx file bytes
+        """
+        log_step("Creating Slides Document", f"{len(slides)} slide(s)")
+
+        doc = Document()
+        cover = doc.add_heading(deck_title or "Presentation", 0)
+        cover.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        if subtitle:
+            sub = doc.add_paragraph(subtitle)
+            sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        if topic_style:
+            meta = doc.add_paragraph()
+            meta.add_run(f"Style: {topic_style}").italic = True
+            meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        doc.add_paragraph("")
+
+        for s in slides:
+            idx = s.get("slide_index", "")
+            role = (s.get("role") or "content").strip()
+            title = (s.get("title") or "").strip() or f"Slide {idx}"
+            bullets = s.get("bullets") or []
+            example = s.get("example")
+            notes = s.get("speaker_notes")
+
+            heading_text = title
+            if idx != "":
+                heading_text = f"{idx}. {title}"
+            level = 1 if role in ("title", "section") else 2
+            doc.add_heading(heading_text, level=level)
+            role_para = doc.add_paragraph()
+            role_para.add_run(f"[{role.upper()}]").font.size = Pt(9)
+            role_para.runs[0].font.italic = True
+
+            if isinstance(bullets, list):
+                for b in bullets:
+                    if b:
+                        doc.add_paragraph(str(b), style="List Bullet")
+            if example:
+                ex = doc.add_paragraph()
+                ex.add_run("Example: ").bold = True
+                ex.add_run(str(example))
+            if notes:
+                n = doc.add_paragraph()
+                n.add_run("Notes: ").bold = True
+                n.add_run(str(notes))
+                n.runs[-1].font.size = Pt(9)
+            doc.add_paragraph("")
+
+        buffer = io.BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        log_success("Slides document created")
+        return buffer.getvalue()
 

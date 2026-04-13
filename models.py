@@ -84,8 +84,12 @@ class OCRDownloadRequest(BaseModel):
 
 class ExtractedAnswer(BaseModel):
     """Model for a single extracted answer."""
-    answer_number: str
-    content: str
+    answer_number: str = ""
+    question_id: Optional[str] = None
+    student_answer: Optional[str] = None
+    section_id: Optional[str] = None
+    section_title: Optional[str] = None
+    content: str = ""
     answer_type: str = "unknown"
     confidence: str = "medium"
     pages: List[int] = []
@@ -162,3 +166,31 @@ class CheckPapersRequest(BaseModel):
 class ExcelDownloadRequest(BaseModel):
     """Request model for downloading grading results as Excel."""
     checking_results: dict  # Full checking results from /check-papers endpoint
+
+
+# ============== SLIDE GENERATION MODELS ==============
+
+class SlideGenerationRequest(BaseModel):
+    """Request body for /slides/generate (JSON API)."""
+    topic: str
+    audience: Optional[str] = None
+    topic_style: str = "general"  # technical | academic | general
+    target_slides: int = 10
+
+
+class SlidesDownloadRequest(BaseModel):
+    """Payload to build a Word deck from a prior /slides/generate response."""
+    deck_title: str = "Presentation"
+    subtitle: Optional[str] = ""
+    topic_style: Optional[str] = None
+    slides: List[dict]
+
+
+class SlideGenerationResponse(BaseModel):
+    """Response from /slides/generate."""
+    success: bool
+    deck_title: str = ""
+    subtitle: str = ""
+    topic_style: str = ""
+    slides: List[dict] = []
+    error: Optional[str] = None

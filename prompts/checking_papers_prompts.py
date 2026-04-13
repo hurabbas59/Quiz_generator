@@ -193,24 +193,74 @@ Grade now:"""
 DOCUMENT CONTENT:
 {content}
 
-Extract all questions and their correct answers. Identify the type of assessment:
-- If mostly MCQ/True-False/Fill-blanks = "quiz"
-- If mostly long/descriptive answers = "assignment"
+Extract all questions and their correct answers. Preserve identifiers as printed.
+Set assessment_type:
+- "quiz" if predominantly objective (MCQ / True-False / short blanks)
+- "assignment" if predominantly descriptive / long answers
+- "mixed" if there is a clear mix of objective and descriptive items
 
 Return in JSON format:
 {
-    "assessment_type": "quiz/assignment",
+    "assessment_type": "quiz/assignment/mixed",
     "total_marks": 0,
     "questions": [
         {
             "question_number": 1,
+            "question_id": "Same label as on the paper if visible, else string of question_number",
+            "section_id": "A/B/Part-II or null",
+            "section_title": "Section heading if inferable, else null",
             "question_text": "The question text...",
-            "correct_answer": "The correct answer...",
+            "correct_answer": "The correct answer or rubric anchor...",
             "marks": 2,
-            "question_type": "mcq/true_false/fill_blank/short_answer/long_answer",
-            "options": ["A", "B", "C", "D"]  // only for MCQ
+            "question_type": "mcq/true_false/fill_blank/short_answer/long_answer/descriptive",
+            "options": ["A", "B", "C", "D"]
         }
     ]
 }
 
 Parse now:"""
+
+    # =========================================================================
+    # UNIFIED GRADING (objective + descriptive + blanks)
+    # =========================================================================
+
+    GRADE_UNIFIED = """You are grading student work against an answer key for a modern exam pattern.
+
+ANSWER KEY (JSON array of questions with question_number, question_id, question_type, marks, correct_answer, section fields):
+{answer_key}
+
+STUDENT RESPONSES (JSON array; each item has question_id and/or question_number, student_answer, answer_type, optional section fields):
+{student_answers}
+
+RULES — apply per question using its question_type from the ANSWER KEY:
+1) Match student responses to key questions primarily by question_id when present, else by question_number. If a response cannot be matched, treat as missing (0 marks) and note this in feedback.
+2) mcq / true_false: normalize case and whitespace; accept clear letter/word equivalents (e.g. "Option B", "b", "B."). Must match the keyed correct option; no partial marks unless the key explicitly allows multiple correct selections.
+3) fill_blank: allow minor formatting differences; accept synonyms and equivalent numeric forms; multi-blank: award partial marks per blank proportionally to marks when obvious from the answer key.
+4) short_answer: concise correctness — allow paraphrase; award partial marks for incomplete but directionally correct responses.
+5) long_answer / descriptive: semantic match first; reward correct concepts and structure; award partial marks generously when partly right; consider clarity and explanation quality in borderline cases.
+6) Avoid double-counting: if two student entries map to the same key question, use the best-supported combined response.
+7) Keep feedback brief and actionable.
+
+Return JSON ONLY:
+{
+    "evaluations": [
+        {
+            "question_number": 1,
+            "question_id": "string or null",
+            "question_type": "from key",
+            "max_marks": 0,
+            "obtained_marks": 0,
+            "correct_answer": "string",
+            "student_answer": "string",
+            "is_correct": true,
+            "feedback": "short rationale referencing matching rule"
+        }
+    ],
+    "total_obtained": 0,
+    "total_max": 0,
+    "overall_feedback": "one short paragraph",
+    "correct_count": 0,
+    "total_questions": 0
+}
+
+Grade now:"""
