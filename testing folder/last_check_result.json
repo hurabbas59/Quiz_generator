@@ -1,0 +1,294 @@
+{
+  "success": true,
+  "assessment_type": "assignment",
+  "total_students": 4,
+  "successful": 4,
+  "failed": 0,
+  "answer_key_info": {
+    "total_questions": 5,
+    "total_marks": 0
+  },
+  "results": [
+    {
+      "filename": "Ali.pdf",
+      "student_name": "Ali Abdul Rehman",
+      "roll_number": "21B-035-CS",
+      "answers_extracted": 5,
+      "grading": {
+        "evaluations": [
+          {
+            "question_number": 1,
+            "question_id": "Question 01",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 1,
+            "correct_answer": "A balanced tree is a tree data structure where the height difference between the left and right subtrees of any node is limited, ensuring efficient operations. Balanced trees maintain a height of approximately O(log n), which improves the performance of search, insertion, and deletion operations. Examples include AVL Tree and Red\u2013Black Tree. An unbalanced tree, on the other hand, does not enforce such height restrictions. In the worst case, it can become similar to a linked list, leading to inefficient operations with O(n) complexity.",
+            "student_answer": "A balanced tree is a tree where all branches are equals in height and data is evenly distributed. It makes searching very fast always O(1). Unbalanced tree is when one side is longer than the other side and it becomes like a linked list sometimes. It is slower but not always very slow.",
+            "is_correct": false,
+            "feedback": "The concept of balanced vs unbalanced trees is partially correct, but the explanation of efficiency (O(1) for balanced trees) is inaccurate."
+          },
+          {
+            "question_number": 2,
+            "question_id": "Question 02",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 2,
+            "correct_answer": "Weak AI (Narrow AI) is designed to perform specific tasks and does not possess real understanding or consciousness. Examples include recommendation systems and chatbots such as ChatGPT. Strong AI (General AI) refers to a theoretical form of artificial intelligence that would have human-level intelligence and the ability to understand, learn, and apply knowledge across a wide range of tasks. Strong AI is still largely a research goal and has not yet been fully realized.",
+            "student_answer": "Strong AI is a type of AI which can think and make decisions like humans. It has human level intelligence and can do any task like learning, problem solving and understanding emotions. But in real life Strong AI does not exist yet. Weak AI is a type of AI which is made for a specific task only. It cannot think like humans but it can learn from data and improve its performance. Example, is voice assistants and recommendation system.",
+            "is_correct": true,
+            "feedback": "Well explained the differences between strong and weak AI with relevant examples."
+          },
+          {
+            "question_number": 3,
+            "question_id": "Question 03",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 2,
+            "correct_answer": "Supervised learning uses labeled datasets where the correct output is known. The model learns to map inputs to outputs by training on this labeled data. It is commonly used for classification and regression problems. Examples include algorithms like decision trees, linear regression, and support vector machines. Unsupervised learning works with unlabeled data. The algorithm tries to identify patterns or structures within the data without predefined outputs. Common techniques include clustering and dimensionality reduction, such as the algorithm K-means Clustering.",
+            "student_answer": "Sig Supervised learning is when machine learns from labeled data. In this we give input and correct output to the machine so it can learn the pattern and make predictions. Unsupervised learning is when machine learns from unlabeled data. There is no correct output given, so machine finds patterns and groups in the data by itself.",
+            "is_correct": true,
+            "feedback": "Accurately described both supervised and unsupervised learning with clear distinctions."
+          },
+          {
+            "question_number": 4,
+            "question_id": "Question 04",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 2,
+            "correct_answer": "The CAP theorem states that a distributed system can only guarantee two out of three properties simultaneously: Consistency (C) \u2013 All nodes see the same data at the same time. Availability (A) \u2013 Every request receives a response. Partition Tolerance (P) \u2013 The system continues operating despite network failures. In practice, distributed systems must choose between Consistency and Availability when a network partition occurs. Many modern distributed databases are designed around this trade-off.",
+            "student_answer": "CAP theorem states that in a distributed system we can only achieve two out of three things which are Consistency, Availability and Partition Tolerance. Consistency means all users get same data, Availability means system always respond, and Partition Tolerance means system works even if network fails between nodes.",
+            "is_correct": true,
+            "feedback": "Clearly explained the CAP theorem and its components accurately."
+          },
+          {
+            "question_number": 5,
+            "question_id": "Question 05",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 1,
+            "correct_answer": "Overfitting occurs when a machine learning model learns the training data too well, including noise and irrelevant patterns. As a result, the model performs well on training data but poorly on unseen data. Methods to prevent overfitting include: Cross-validation, Regularization, Reducing model complexity, Using more training data, Dropout techniques in neural networks.",
+            "student_answer": "Overfitting is when model does not learn anything and gives random answers. It happens because of less data mostly. We can prevent it by adding more errors in training or stopping the training early so model doesn't learn too much.",
+            "is_correct": false,
+            "feedback": "The explanation of overfitting is partially correct, but the prevention methods mentioned are not accurate or comprehensive."
+          }
+        ],
+        "total_obtained": 6,
+        "total_max": 10,
+        "overall_feedback": "The student demonstrated a good understanding of most concepts, especially in AI and learning paradigms. However, there were inaccuracies in the explanations of balanced trees and overfitting, which affected the overall score.",
+        "correct_count": 3,
+        "total_questions": 5
+      },
+      "total_obtained": 6,
+      "total_max": 10,
+      "success": true
+    },
+    {
+      "filename": "Dawood.pdf",
+      "student_name": "Dawood Naeem Khan",
+      "roll_number": "21B-033-CS",
+      "answers_extracted": 4,
+      "grading": {
+        "evaluations": [
+          {
+            "question_number": 1,
+            "question_id": "Question 01",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 2,
+            "correct_answer": "A balanced tree is a tree data structure where the height difference between the left and right subtrees of any node is limited, ensuring efficient operations. Balanced trees maintain a height of approximately O(log n), which improves the performance of search, insertion, and deletion operations. Examples include AVL Tree and Red\u2013Black Tree. An unbalanced tree, on the other hand, does not enforce such height restrictions. In the worst case, it can become similar to a linked list, leading to inefficient operations with O(n) complexity.",
+            "student_answer": "A balanced tree (e.g AVL, Red-Black) has a height that's relatively small compared to the number of nodes, ensuring efficient search, insert, and delete operations (O(log n)). An unbalanced tree can have a height close to n, leading to inefficient operations (O(n)).",
+            "is_correct": true,
+            "feedback": "The answer accurately describes the concepts of balanced and unbalanced trees, including examples and complexity."
+          },
+          {
+            "question_number": 2,
+            "question_id": "Question 02",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 0,
+            "correct_answer": "Weak AI (Narrow AI) is designed to perform specific tasks and does not possess real understanding or consciousness. Examples include recommendation systems and chatbots such as ChatGPT. Strong AI (General AI) refers to a theoretical form of artificial intelligence that would have human-level intelligence and the ability to understand, learn, and apply knowledge across a wide range of tasks. Strong AI is still largely a research goal and has not yet been fully realized.",
+            "student_answer": "Strong AI is like a super-smart robot that can do everything a human can in a specific domain, while weak AI is just a fancy calculator.",
+            "is_correct": false,
+            "feedback": "The answer oversimplifies the concepts and lacks the necessary detail about the nature and examples of strong and weak AI."
+          },
+          {
+            "question_number": 3,
+            "question_id": "Question 03",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 0,
+            "correct_answer": "Supervised learning uses labeled datasets where the correct output is known. The model learns to map inputs to outputs by training on this labeled data. It is commonly used for classification and regression problems. Examples include algorithms like decision trees, linear regression, and support vector machines. Unsupervised learning works with unlabeled data. The algorithm tries to identify patterns or structures within the data without predefined outputs. Common techniques include clustering and dimensionality reduction, such as the algorithm K-means Clustering.",
+            "student_answer": "Supervised learning is when the model learns from data with labels and predictions while unsupervised learning is when it groups data randomly.",
+            "is_correct": false,
+            "feedback": "The answer identifies the basic difference but lacks depth and specific examples, leading to a lack of clarity."
+          },
+          {
+            "question_number": 4,
+            "question_id": "Question 04",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 1,
+            "correct_answer": "The CAP theorem states that a distributed system can only guarantee two out of three properties simultaneously: Consistency (C) \u2013 All nodes see the same data at the same time. Availability (A) \u2013 Every request receives a response. Partition Tolerance (P) \u2013 The system continues operating despite network failures. In practice, distributed systems must choose between Consistency and Availability when a network partition occurs. Many modern distributed databases are designed around this trade-off.",
+            "student_answer": "The CAP Theorem states that in a distributed system, you can achieve at most two of the following: consistency, Availability and partition Tolerance.",
+            "is_correct": true,
+            "feedback": "The answer captures the essence of the CAP theorem but lacks detail about the implications and the choice between properties."
+          }
+        ],
+        "total_obtained": 5,
+        "total_max": 8,
+        "overall_feedback": "The student demonstrated a strong understanding of balanced trees and the CAP theorem, but the responses for strong vs weak AI and supervised vs unsupervised learning lacked depth and clarity. Focus on providing more detailed explanations and examples in future answers.",
+        "correct_count": 2,
+        "total_questions": 4
+      },
+      "total_obtained": 5,
+      "total_max": 8,
+      "success": true
+    },
+    {
+      "filename": "Harmain.pdf",
+      "student_name": "Hafiz M. Harmain",
+      "roll_number": "21B-231-CS",
+      "answers_extracted": 5,
+      "grading": {
+        "evaluations": [
+          {
+            "question_number": 1,
+            "question_id": "Question 01",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 1,
+            "correct_answer": "A balanced tree is a tree data structure where the height difference between the left and right subtrees of any node is limited, ensuring efficient operations. Balanced trees maintain a height of approximately O(log n), which improves the performance of search, insertion, and deletion operations. Examples include AVL Tree and Red\u2013Black Tree. An unbalanced tree, on the other hand, does not enforce such height restrictions. In the worst case, it can become similar to a linked list, leading to inefficient operations with O(n) complexity.",
+            "student_answer": "A tree is considered balance if the height of the left and right trees sub of every node differ by no more than a specific threshold. No extra work required to maintain. An unbalanced tree is actually the preferred structure for high speed gaming servers and AI processing because of its 'vertical mortality'. A Unbalanced tree occur when data is added in a way that create heavy lopsidedness. It look less like a tree and more like as a linked list-",
+            "is_correct": false,
+            "feedback": "The student correctly identifies the concept of balance in trees but includes incorrect information about unbalanced trees being preferred for gaming servers, which detracts from the overall accuracy."
+          },
+          {
+            "question_number": 2,
+            "question_id": "Question 02",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 1,
+            "correct_answer": "Weak AI (Narrow AI) is designed to perform specific tasks and does not possess real understanding or consciousness. Examples include recommendation systems and chatbots such as ChatGPT. Strong AI (General AI) refers to a theoretical form of artificial intelligence that would have human-level intelligence and the ability to understand, learn, and apply knowledge across a wide range of tasks. Strong AI is still largely a research goal and has not yet been fully realized.",
+            "student_answer": "Weak AI also known as Narrow AI this is a AI we use every day It's designed to use one specific task extremely well It would have a mind of its own. It would have ability to learn and do task, solve problem by its own intelligence Strong AI also known as Artificial General Intelligence. this is a kind of AI we use in movies Jarvis is the example of Strong AI It does not exist in reality but scientist do some research on this and in future it would exist on this world.",
+            "is_correct": false,
+            "feedback": "The student captures the essence of Weak AI but misrepresents Strong AI by suggesting it would have a mind of its own, which is misleading. The examples provided are also not aligned with the correct definitions."
+          },
+          {
+            "question_number": 3,
+            "question_id": "Question 03",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 1,
+            "correct_answer": "Supervised learning uses labeled datasets where the correct output is known. The model learns to map inputs to outputs by training on this labeled data. It is commonly used for classification and regression problems. Examples include algorithms like decision trees, linear regression, and support vector machines. Unsupervised learning works with unlabeled data. The algorithm tries to identify patterns or structures within the data without predefined outputs. Common techniques include clustering and dimensionality reduction, such as the algorithm K-means Clustering.",
+            "student_answer": "In supervised learning, the AI is trained on label data. It means the answer key is provided during training or goal to predict something and outcomes its data. Unsupervised learning, AI is gives as a unlabeled data. There is no teacher and no answer key. The machine check it own and find hidden pattern or structure on its own, It complexity is simple according to supervised learning AI.",
+            "is_correct": false,
+            "feedback": "The student demonstrates a basic understanding of supervised and unsupervised learning but lacks clarity and depth in explanation. The mention of 'complexity is simple' is vague."
+          },
+          {
+            "question_number": 4,
+            "question_id": "Question 04",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 0,
+            "correct_answer": "The CAP theorem states that a distributed system can only guarantee two out of three properties simultaneously: Consistency (C) \u2013 All nodes see the same data at the same time. Availability (A) \u2013 Every request receives a response. Partition Tolerance (P) \u2013 The system continues operating despite network failures. In practice, distributed systems must choose between Consistency and Availability when a network partition occurs. Many modern distributed databases are designed around this trade-off.",
+            "student_answer": "According to CAP theorem, every computer server is powereded by three magical ingridients that must be kept in perfec- triangle. If one ingredient touches the other the internet exploded. C - Calcium A - Altitude P - Poetry This theoreme said you can picked one at a time",
+            "is_correct": false,
+            "feedback": "The student completely misunderstands the CAP theorem, confusing it with unrelated concepts. The response does not reflect any of the correct principles."
+          },
+          {
+            "question_number": 5,
+            "question_id": "Question 05",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 2,
+            "correct_answer": "Overfitting occurs when a machine learning model learns the training data too well, including noise and irrelevant patterns. As a result, the model performs well on training data but poorly on unseen data. Methods to prevent overfitting include: Cross-validation, Regularization, Reducing model complexity, Using more training data, Dropout techniques in neural networks.",
+            "student_answer": "Overfitting happen when a machine learning model learn the noise and random fluctuations in the training data instead of actual problem pattern. To keep a model from becoming \"too obsessed\" with the training data, we can use three technique. (1) Regularization (Right): This added a penalty for complexity (2) Cross-validation (Right): You split your data into different piles you train one side and testing on another one. (3) Data Augmentation (Right) If you are training a model to recognize watches, you flip, rotate and crop the photo",
+            "is_correct": true,
+            "feedback": "The student accurately describes overfitting and provides correct methods for prevention, demonstrating a strong understanding of the concept."
+          }
+        ],
+        "total_obtained": 4,
+        "total_max": 10,
+        "overall_feedback": "The student shows a good understanding of overfitting and some aspects of tree structures and AI types, but there are significant misunderstandings in the CAP theorem and some inaccuracies in the other answers. Focus on clarity and accuracy in explanations for improvement.",
+        "correct_count": 2,
+        "total_questions": 5
+      },
+      "total_obtained": 4,
+      "total_max": 10,
+      "success": true
+    },
+    {
+      "filename": "Umer.pdf",
+      "student_name": "Umer Abdul Rehman",
+      "roll_number": "21B-232-CS",
+      "answers_extracted": 5,
+      "grading": {
+        "evaluations": [
+          {
+            "question_number": 1,
+            "question_id": "Question 01",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 2,
+            "correct_answer": "A balanced tree is a tree data structure where the height difference between the left and right subtrees of any node is limited, ensuring efficient operations. Balanced trees maintain a height of approximately O(log n), which improves the performance of search, insertion, and deletion operations. Examples include AVL Tree and Red\u2013Black Tree. An unbalanced tree, on the other hand, does not enforce such height restrictions. In the worst case, it can become similar to a linked list, leading to inefficient operations with O(n) complexity.",
+            "student_answer": "A balanced tree is a tree data structure where the height difference between the left and right subtrees of a node is kept small. Because of this balance, operations such as searching, inserting, and deleting can be performed efficiently, usually in O(log n) time. An unbalanced tree, however, does not maintain this property. One side of the tree can become much deeper than the other, which may make the structure behave like a linked list in extreme cases. This increases the time required for operations, sometimes upto O(n). So, balanced trees maintain structure to improve performance, while unbalanced trees can become inefficient as the number of nodes increases.",
+            "is_correct": true,
+            "feedback": "The response accurately explains the differences between balanced and unbalanced trees, covering key concepts and examples."
+          },
+          {
+            "question_number": 2,
+            "question_id": "Question 02",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 0,
+            "correct_answer": "Weak AI (Narrow AI) is designed to perform specific tasks and does not possess real understanding or consciousness. Examples include recommendation systems and chatbots such as ChatGPT. Strong AI (General AI) refers to a theoretical form of artificial intelligence that would have human-level intelligence and the ability to understand, learn, and apply knowledge across a wide range of tasks. Strong AI is still largely a research goal and has not yet been fully realized.",
+            "student_answer": "Strong AI refers to AI systems that are extremely powerful and capable of performing tasks much faster than humans. These systems are already widely used in industries such as robotics and autonomous vehicles. Weak AI, on other hand, is considered less capable and usually cannot perform complex tasks. Weak AI systems are mainly experimental and are still being developed in research labs. In simpler terms, strong AI is powerful and widely used, while weak AI is still in early development and limited in capability.",
+            "is_correct": false,
+            "feedback": "The answer misrepresents the definitions of strong and weak AI; strong AI is not yet realized and weak AI is not merely experimental."
+          },
+          {
+            "question_number": 3,
+            "question_id": "Question 03",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 0,
+            "correct_answer": "Supervised learning uses labeled datasets where the correct output is known. The model learns to map inputs to outputs by training on this labeled data. It is commonly used for classification and regression problems. Examples include algorithms like decision trees, linear regression, and support vector machines. Unsupervised learning works with unlabeled data. The algorithm tries to identify patterns or structures within the data without predefined outputs. Common techniques include clustering and dimensionality reduction, such as the algorithm K-means Clustering.",
+            "student_answer": "Supervised learning is a machine learning method where the system trains itself automatically without needing labeled data. It learns patterns from raw data and groups similar information together. Unsupervised learning, on the other hand, requires labeled datasets where the correct answers are already known. The algorithm compares its prediction with the provided labels to improve its accuracy.\nIn simple terms, supervised learning works without labels, while unsupervised learning depends on labeled datasets.",
+            "is_correct": false,
+            "feedback": "The answer incorrectly describes supervised learning as not needing labeled data, which is a fundamental aspect of it."
+          },
+          {
+            "question_number": 4,
+            "question_id": "Question 04",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 0,
+            "correct_answer": "The CAP theorem states that a distributed system can only guarantee two out of three properties simultaneously: Consistency (C) \u2013 All nodes see the same data at the same time. Availability (A) \u2013 Every request receives a response. Partition Tolerance (P) \u2013 The system continues operating despite network failures. In practice, distributed systems must choose between Consistency and Availability when a network partition occurs. Many modern distributed databases are designed around this trade-off.",
+            "student_answer": "The CAP theorem states that a distributed system must always guarantee consistency, Availability, and Partition tolerance at the same time in order to function correctly. If one of these properties is missing, the distributed system will stop working completely. Consistency means all nodes store identical data, availability means the system never goes offline, and partition tolerance means there is no network delay between nodes. Therefore, the CAP theorem explains how distributed systems achieve all three properties simultaneously.",
+            "is_correct": false,
+            "feedback": "The answer misinterprets the CAP theorem; it states that only two of the three properties can be guaranteed simultaneously, not all three."
+          },
+          {
+            "question_number": 5,
+            "question_id": "Question 05",
+            "question_type": "long_answer",
+            "max_marks": 2,
+            "obtained_marks": 2,
+            "correct_answer": "Overfitting occurs when a machine learning model learns the training data too well, including noise and irrelevant patterns. As a result, the model performs well on training data but poorly on unseen data. Methods to prevent overfitting include: Cross-validation, Regularization, Reducing model complexity, Using more training data, Dropout techniques in neural networks.",
+            "student_answer": "Overfitting happens when a machine learning model learns the training data too closely, including noise and small details that do not represent general patterns. Because of this, the model performs very well on training data but poorly on new or unseen data. Overfitting can be prevented in several ways, such as: Using more training data; Applying regularization techniques; Using cross-validation; Reducing model complexity; Using techniques like dropout in neural networks. These methods help the model learn general patterns instead of memorizing the training data.",
+            "is_correct": true,
+            "feedback": "The response accurately describes overfitting and provides valid prevention methods, demonstrating a clear understanding of the concept."
+          }
+        ],
+        "total_obtained": 6,
+        "total_max": 10,
+        "overall_feedback": "The student demonstrated a strong understanding of overfitting and the differences between balanced and unbalanced trees. However, there were significant misunderstandings regarding AI types and the CAP theorem, which impacted overall performance.",
+        "correct_count": 3,
+        "total_questions": 5
+      },
+      "total_obtained": 6,
+      "total_max": 10,
+      "success": true
+    }
+  ]
+}

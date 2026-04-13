@@ -1,0 +1,70 @@
+{
+  "answers": [
+    {
+      "question_id": "Question 01",
+      "student_answer": "A balanced tree is a tree where all branches are equals in height and data is evenly distributed. It makes searching very fast always O(1). Unbalanced tree is when one side is longer than the other side and it becomes like a linked list sometimes. It is slower but not always very slow.",
+      "answer_type": "descriptive",
+      "section_id": null,
+      "section_title": null,
+      "confidence": "high",
+      "pages": [
+        2
+      ],
+      "answer_number": "Question 01",
+      "content": "A balanced tree is a tree where all branches are equals in height and data is evenly distributed. It makes searching very fast always O(1). Unbalanced tree is when one side is longer than the other side and it becomes like a linked list sometimes. It is slower but not always very slow."
+    },
+    {
+      "question_id": "Question 02",
+      "student_answer": "Strong AI is a type of AI which can think and make decisions like humans. It has human level intelligence and can do any task like learning, problem solving and understanding emotions. But in real life strong AI does not exist yet. Weak AI is a type of AI which is made for a specific task only. It cannot think like humans but it can learn from data and improve its performance. Example, is voice assistants and recommendation system.",
+      "answer_type": "descriptive",
+      "section_id": null,
+      "section_title": null,
+      "confidence": "high",
+      "pages": [
+        3
+      ],
+      "answer_number": "Question 02",
+      "content": "Strong AI is a type of AI which can think and make decisions like humans. It has human level intelligence and can do any task like learning, problem solving and understanding emotions. But in real life strong AI does not exist yet. Weak AI is a type of AI which is made for a specific task only. It cannot think like humans but it can learn from data and improve its performance. Example, is voice assistants and recommendation system."
+    },
+    {
+      "question_id": "Question 03",
+      "student_answer": "Sig Supervised learning is when machine learns from labeled data. In this we give input and correct output to the machine so it can learn the pattern and make predictions. Unsupervised learning is when machine learns from unlabeled data. There is no correct output given, so machine finds patterns and groups in the data by itself.",
+      "answer_type": "descriptive",
+      "section_id": null,
+      "section_title": null,
+      "confidence": "high",
+      "pages": [
+        4
+      ],
+      "answer_number": "Question 03",
+      "content": "Sig Supervised learning is when machine learns from labeled data. In this we give input and correct output to the machine so it can learn the pattern and make predictions. Unsupervised learning is when machine learns from unlabeled data. There is no correct output given, so machine finds patterns and groups in the data by itself."
+    },
+    {
+      "question_id": "Question 04",
+      "student_answer": "CAP theorem states that in a distributed system we can only achieve two out of three things which are Consistency, Availability and Partition Tolerance. Consistency means all users get same data, Availability means system always respond, and Partition Tolerance means system works even if network fails between nodes.",
+      "answer_type": "descriptive",
+      "section_id": null,
+      "section_title": "Question And Answer",
+      "confidence": "high",
+      "pages": [
+        5
+      ],
+      "answer_number": "Question 04",
+      "content": "CAP theorem states that in a distributed system we can only achieve two out of three things which are Consistency, Availability and Partition Tolerance. Consistency means all users get same data, Availability means system always respond, and Partition Tolerance means system works even if network fails between nodes."
+    },
+    {
+      "question_id": "Question 05",
+      "student_answer": "Over fitting is when model does not learn anything and gives random answers. It happens because of less data mostly. We can prevent it by adding more errors in training or stopping the training early so model doesn't learn too muche",
+      "answer_type": "descriptive",
+      "section_id": null,
+      "section_title": null,
+      "confidence": "high",
+      "pages": [
+        6
+      ],
+      "answer_number": "Question 05",
+      "content": "Over fitting is when model does not learn anything and gives random answers. It happens because of less data mostly. We can prevent it by adding more errors in training or stopping the training early so model doesn't learn too muche"
+    }
+  ],
+  "quiz_answers": []
+}

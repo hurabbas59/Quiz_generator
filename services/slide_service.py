@@ -38,11 +38,12 @@ class SlideService:
             ts = "general"
         topic_style = ts
         audience = audience or "Not specified"
-        prompt = SlidePrompts.GENERATE_SLIDES.format(
-            topic=topic.strip(),
-            audience=audience,
-            topic_style=topic_style,
-            target_slides=max(3, min(target_slides, 40)),
+        ts_count = str(max(3, min(target_slides, 40)))
+        prompt = (
+            SlidePrompts.GENERATE_SLIDES.replace("[[[TOPIC]]]", topic.strip())
+            .replace("[[[AUDIENCE]]]", audience)
+            .replace("[[[TOPIC_STYLE]]]", topic_style)
+            .replace("[[[TARGET_SLIDES]]]", ts_count)
         )
         messages = [
             {"role": "system", "content": SlidePrompts.SYSTEM},

@@ -84,20 +84,18 @@ Extract now:"""
     # - AI gives marks based on understanding shown
     # - AI can give partial marks if answer is partially correct
     #
-    # PLACEHOLDERS (filled in by code):
-    # - {answer_key} = The correct answers from teacher
-    # - {student_answers} = What the student wrote
-    # - {total_questions} = How many questions there are
+    # PLACEHOLDERS (filled in by code via str.replace — safe if JSON contains { }):
+    # - [[[ANSWER_KEY_JSON]]], [[[STUDENT_ANSWERS_JSON]]], [[[TOTAL_QUESTIONS]]]
     
     GRADE_ASSIGNMENT_ANSWERS = """Grade the following student answers against the answer key.
 
 ANSWER KEY (Correct Answers):
-{answer_key}
+[[[ANSWER_KEY_JSON]]]
 
 STUDENT ANSWERS:
-{student_answers}
+[[[STUDENT_ANSWERS_JSON]]]
 
-TOTAL QUESTIONS: {total_questions}
+TOTAL QUESTIONS: [[[TOTAL_QUESTIONS]]]
 MARKS PER QUESTION: Use the marks specified in the answer key for each question.
 
 GRADING INSTRUCTIONS:
@@ -135,17 +133,15 @@ Grade now:"""
     # - For Fill in Blanks: Check meaning (synonyms are OK)
     # - Usually full marks or zero (no partial marks for MCQ/True-False)
     #
-    # PLACEHOLDERS:
-    # - {answer_key} = Correct answers
-    # - {student_answers} = Student's selected options
+    # PLACEHOLDERS: [[[ANSWER_KEY_JSON]]], [[[STUDENT_ANSWERS_JSON]]]
     
     GRADE_QUIZ_ANSWERS = """Grade the following quiz answers against the answer key.
 
 ANSWER KEY (Correct Answers):
-{answer_key}
+[[[ANSWER_KEY_JSON]]]
 
 STUDENT ANSWERS:
-{student_answers}
+[[[STUDENT_ANSWERS_JSON]]]
 
 GRADING INSTRUCTIONS:
 1. For MCQ - check if selected option matches correct answer
@@ -185,13 +181,12 @@ Grade now:"""
     # - Determines if it's a quiz or assignment
     # - Extracts marks for each question
     #
-    # PLACEHOLDER:
-    # - {content} = Raw text extracted from answer key document
+    # PLACEHOLDER (str.replace): [[[DOCUMENT_CONTENT]]]
     
     PARSE_ANSWER_KEY = """Parse this answer key document and extract all correct answers.
 
 DOCUMENT CONTENT:
-{content}
+[[[DOCUMENT_CONTENT]]]
 
 Extract all questions and their correct answers. Preserve identifiers as printed.
 Set assessment_type:
@@ -227,10 +222,10 @@ Parse now:"""
     GRADE_UNIFIED = """You are grading student work against an answer key for a modern exam pattern.
 
 ANSWER KEY (JSON array of questions with question_number, question_id, question_type, marks, correct_answer, section fields):
-{answer_key}
+[[[ANSWER_KEY_JSON]]]
 
 STUDENT RESPONSES (JSON array; each item has question_id and/or question_number, student_answer, answer_type, optional section fields):
-{student_answers}
+[[[STUDENT_ANSWERS_JSON]]]
 
 RULES — apply per question using its question_type from the ANSWER KEY:
 1) Match student responses to key questions primarily by question_id when present, else by question_number. If a response cannot be matched, treat as missing (0 marks) and note this in feedback.

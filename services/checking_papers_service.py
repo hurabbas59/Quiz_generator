@@ -65,6 +65,20 @@ except ImportError:
 # MAIN SERVICE CLASS
 # =============================================================================
 
+def _fill_parse_answer_key_prompt(document_text: str) -> str:
+    """Build parse prompt; use replace so OCR text may contain { or } without breaking."""
+    return CheckingPapersPrompts.PARSE_ANSWER_KEY.replace(
+        "[[[DOCUMENT_CONTENT]]]", document_text
+    )
+
+
+def _fill_grade_unified_prompt(answer_key_json: str, student_answers_json: str) -> str:
+    return (
+        CheckingPapersPrompts.GRADE_UNIFIED.replace("[[[ANSWER_KEY_JSON]]]", answer_key_json)
+        .replace("[[[STUDENT_ANSWERS_JSON]]]", student_answers_json)
+    )
+
+
 class CheckingPapersService:
     """
     Main service for checking/grading student papers.
@@ -167,7 +181,7 @@ class CheckingPapersService:
         
         # STEP 2: Send text to AI to parse and structure the answer key
         # The AI will identify each question, its correct answer, and marks
-        prompt = CheckingPapersPrompts.PARSE_ANSWER_KEY.format(content=raw_text)
+        prompt = _fill_parse_answer_key_prompt(raw_text)
         
         # Create the message for the AI
         messages = [
@@ -276,10 +290,7 @@ class CheckingPapersService:
         log_step("Grading Answers (unified)", f"{len(answer_key.get('questions', []))} key items")
         answer_key_text = json.dumps(answer_key.get('questions', []), indent=2)
         student_answers_text = json.dumps(student_answers, indent=2)
-        prompt = CheckingPapersPrompts.GRADE_UNIFIED.format(
-            answer_key=answer_key_text,
-            student_answers=student_answers_text,
-        )
+        prompt = _fill_grade_unified_prompt(answer_key_text, student_answers_text)
         messages = [
             {"role": "system", "content": CheckingPapersPrompts.SYSTEM},
             {"role": "user", "content": prompt},
@@ -466,7 +477,7 @@ class CheckingPapersService:
         log_step("Checking Papers (Google Drive)", drive_url[:50])
         
         # STEP 1: Parse the answer key text
-        prompt = CheckingPapersPrompts.PARSE_ANSWER_KEY.format(content=answer_key_text)
+        prompt = _fill_parse_answer_key_prompt(answer_key_text)
         messages = [
             {"role": "system", "content": CheckingPapersPrompts.SYSTEM},
             {"role": "user", "content": prompt}

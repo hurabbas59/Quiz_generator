@@ -16,11 +16,11 @@ Rules:
     GENERATE_SLIDES = """Create a slide deck outline for the following request.
 
 TOPIC / PROMPT:
-{topic}
+[[[TOPIC]]]
 
-AUDIENCE (optional): {audience}
-TOPIC STYLE (technical | academic | general): {topic_style}
-TARGET SLIDE COUNT (soft limit, include title + closing if appropriate): {target_slides}
+AUDIENCE (optional): [[[AUDIENCE]]]
+TOPIC STYLE (technical | academic | general): [[[TOPIC_STYLE]]]
+TARGET SLIDE COUNT (soft limit, include title + closing if appropriate): [[[TARGET_SLIDES]]]
 
 Return VALID JSON only with this shape:
 {{
