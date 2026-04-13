@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import Response
 from typing import List
+from fastapi.middleware.cors import CORSMiddleware
 
 from models import (
     GenerationResponse, 
@@ -22,6 +23,14 @@ from utils.logger import log_step, log_success, log_error, logger
 app = FastAPI(title="Quiz Generator API")
 service = GenerationService()
 
+# Allow CORS for frontend development origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # ============== GENERATION ENDPOINTS ==============
 
 @app.post("/generate", response_model=GenerationResponse)
@@ -35,7 +44,8 @@ async def generate_quiz_and_assignments(
     quiz_difficulty: str = Form(default="medium"),
     assignment_questions: int = Form(default=5),
     assignment_difficulty: str = Form(default="medium"),
-    delete_index_after: bool = Form(default=True)
+    delete_index_after: bool = Form(default=True),
+    prompt: str = Form(default="")
 ):
     """Generate quizzes and assignments from uploaded documents."""
     log_step("API: /generate", f"Files: {len(files)}, Quizzes: {num_quizzes}, Assignments: {num_assignments}")
@@ -59,13 +69,14 @@ async def generate_quiz_and_assignments(
             difficulty=assignment_difficulty
         )
         
-        log_step("Generating content", f"Quizzes: {num_quizzes}, Assignments: {num_assignments}")
+        log_step("Generating content", f"Quizzes: {num_quizzes}, Assignments: {num_assignments}, Prompt: {prompt[:30]}")
         result = service.generate_all(
             num_quizzes=num_quizzes,
             num_assignments=num_assignments,
             quiz_config=quiz_config,
             assignment_config=assignment_config,
-            delete_after=delete_index_after
+            delete_after=delete_index_after,
+            prompt=prompt
         )
         
         log_success(f"Generated {len(result['quizzes'])} quizzes and {len(result['assignments'])} assignments")

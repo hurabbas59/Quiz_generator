@@ -80,7 +80,7 @@ class GenerationService:
             response = response[:-3]
         return json.loads(response.strip())
     
-    def generate_quiz(self, config: QuizConfig, quiz_number: int) -> Quiz:
+    def generate_quiz(self, config: QuizConfig, quiz_number: int, prompt_instruction: str = "") -> Quiz:
         """Generate a single quiz."""
         difficulty = getattr(config, 'difficulty', 'medium')
         log_step(f"Generating Quiz {quiz_number}", f"Difficulty: {difficulty}")
@@ -108,6 +108,9 @@ class GenerationService:
             question_types=', '.join(question_types)
         )
         
+        if prompt_instruction:
+            prompt += f"\n\nADDITIONAL INSTRUCTION FROM USER:\n{prompt_instruction}"
+
         messages = [
             {"role": "system", "content": GenerationPrompts.SYSTEM},
             {"role": "user", "content": prompt}
@@ -122,7 +125,7 @@ class GenerationService:
         log_success(f"Quiz {quiz_number}: {len(questions)} questions, {total_marks} marks")
         return Quiz(quiz_number=quiz_number, questions=questions, total_marks=total_marks)
     
-    def generate_assignment(self, config: AssignmentConfig, assignment_number: int) -> Assignment:
+    def generate_assignment(self, config: AssignmentConfig, assignment_number: int, prompt_instruction: str = "") -> Assignment:
         """Generate a single assignment."""
         difficulty = config.difficulty
         log_step(f"Generating Assignment {assignment_number}", f"Difficulty: {difficulty}")
@@ -135,6 +138,9 @@ class GenerationService:
             content=content
         )
         
+        if prompt_instruction:
+            prompt += f"\n\nADDITIONAL INSTRUCTION FROM USER:\n{prompt_instruction}"
+
         messages = [
             {"role": "system", "content": GenerationPrompts.SYSTEM},
             {"role": "user", "content": prompt}
@@ -155,7 +161,8 @@ class GenerationService:
         num_assignments: int,
         quiz_config: QuizConfig,
         assignment_config: AssignmentConfig,
-        delete_after: bool = True
+        delete_after: bool = True,
+        prompt: str = ""
     ) -> Dict:
         """Generate all quizzes and assignments with parallel processing."""
         log_step("Generate All (Parallel)", f"Quizzes: {num_quizzes}, Assignments: {num_assignments}")
@@ -167,11 +174,11 @@ class GenerationService:
         with ThreadPoolExecutor(max_workers=4) as executor:
             # Submit all tasks
             quiz_futures = {
-                executor.submit(self.generate_quiz, quiz_config, i + 1): i + 1
+                executor.submit(self.generate_quiz, quiz_config, i + 1, prompt): i + 1
                 for i in range(num_quizzes)
             }
             assignment_futures = {
-                executor.submit(self.generate_assignment, assignment_config, i + 1): i + 1
+                executor.submit(self.generate_assignment, assignment_config, i + 1, prompt): i + 1
                 for i in range(num_assignments)
             }
             
