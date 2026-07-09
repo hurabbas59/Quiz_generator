@@ -55,19 +55,39 @@ CRITICAL RULES:
     # Used with GPT Vision to read the first page of student paper
     # and find their name and roll number (even if handwritten)
     
-    EXTRACT_STUDENT_INFO = """Extract student information from this document image.
+    EXTRACT_STUDENT_INFO = """This is a UIT University Semester Examination cover page. Extract all student information carefully.
 
-Look for:
-- Student Name (may be handwritten or typed)
-- Roll Number / Student ID / Registration Number
-- Any other identifying information
+FORM STRUCTURE:
+- Top right: Two checkboxes — Morning / Evening (check which is ticked)
+- Top row boxes (left of "Semester Examination"): Semester value written in boxes
+- Top row boxes (right of "Semester Examination"): Year written in boxes
+- NAME: Student name written letter by letter in individual boxes
+- ROLL No format is: [year][semester_type]-[3-digit number]-[department] (e.g. "21FA-079-SE")
+  - Year (2-digit, e.g. 21, 22, 23, 24, 25, 26) — read from the year checkboxes on the left (21-26), check which is filled
+  - FA/SP checkbox: indicates Fall (FA) or Spring (SP) — combined with year e.g. "21FA"
+  - BUBBLE GRID (3 columns, digits 0-9 each): student fills EXACTLY ONE bubble per column. Read each column top-to-bottom, find the filled/darkened bubble, that is the digit. Combine 3 columns left-to-right to form the 3-digit number (e.g. "079")
+  - Department: read from the department checkboxes on the RIGHT side (CS, SE, AI, CET, SET, EE, TE, PE, BBA, CE) — whichever is ticked
+- SEAT No: boxes with a dash separator
+- COURSE CODE: boxes with a dash separator
+
+INSTRUCTIONS:
+- For bubble/OMR fields: a filled/darkened bubble means that digit is selected for that column
+- For checkboxes: a ticked or filled box means it is selected
+- Reconstruct the roll number as: [year][semester_type]-[3-digit number]-[department] (e.g. "21FA-079-SE")
+- For each bubble column: scan bubbles 0 through 9, the one that is filled/darkened/marked is the digit for that column
+- Read the name from the individual letter boxes left to right
 
 Return in JSON format:
 {
-    "student_name": "Name or 'Unknown' if not found",
-    "roll_number": "Roll number or 'Unknown' if not found",
-    "confidence": "high/medium/low",
-    "additional_info": "Any other relevant info"
+    "student_name": "Full name or 'Unknown' if not found",
+    "roll_number": "Roll number in format YYFA-NNN-DEPT or YYSP-NNN-DEPT (e.g. 21FA-079-SE) or 'Unknown' if not found",
+    "semester": "Semester value or 'Unknown'",
+    "session": "Morning or Evening or 'Unknown'",
+    "semester_type": "FA (Fall) or SP (Spring) or 'Unknown'",
+    "department": "Department code (CS/SE/AI/CET/SET/EE/TE/PE/BBA/CE) or 'Unknown'",
+    "seat_number": "Seat number or 'Unknown'",
+    "course_code": "Course code or 'Unknown'",
+    "confidence": "high/medium/low"
 }
 
 Extract now:"""

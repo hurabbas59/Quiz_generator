@@ -168,6 +168,11 @@ class ExcelDownloadRequest(BaseModel):
     checking_results: dict  # Full checking results from /check-papers endpoint
 
 
+class ReportDownloadRequest(BaseModel):
+    """Request model for downloading detailed grading report as Word document."""
+    checking_results: dict  # Full checking results from /check-papers endpoint
+
+
 # ============== SLIDE GENERATION MODELS ==============
 
 class SlideGenerationRequest(BaseModel):

@@ -11,6 +11,7 @@ from models import (
     CheckingPapersResponse,
     CheckPapersRequest,
     ExcelDownloadRequest,
+    ReportDownloadRequest,
     SlideGenerationRequest,
     SlideGenerationResponse,
     SlidesDownloadRequest,
@@ -24,6 +25,16 @@ from vectordb.vector_ops import PineconeVectorDB
 from utils.logger import log_step, log_success, log_error, logger
 
 app = FastAPI(title="Quiz Generator API")
+
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to "http://localhost:3000" in production if needed
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 service = GenerationService()
 
 # ============== GENERATION ENDPOINTS ==============
@@ -346,6 +357,30 @@ async def download_grading_excel(request: ExcelDownloadRequest):
         )
     except Exception as e:
         log_error("Excel generation failed", e)
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/check-papers/download-report")
+async def download_detailed_report(request: ReportDownloadRequest):
+    """Download a detailed grading report as a Word document.
+
+    For every student the report shows:
+    - Each question with student answer vs correct answer
+    - Marks obtained and the AI grading reason / feedback
+    - Overall feedback and total score
+    """
+    log_step("API: /check-papers/download-report", "Generating detailed report")
+
+    try:
+        doc_bytes = DocumentService.create_detailed_report_document(request.checking_results)
+        log_success("Detailed report generated")
+        return Response(
+            content=doc_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": "attachment; filename=detailed_grading_report.docx"},
+        )
+    except Exception as e:
+        log_error("Detailed report generation failed", e)
         return {"success": False, "error": str(e)}
 
 

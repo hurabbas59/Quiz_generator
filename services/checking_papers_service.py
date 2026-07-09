@@ -355,12 +355,24 @@ class CheckingPapersService:
             
             # STEP 4: Grade the answers (unified exam pattern)
             grading_result = self._grade_answers_unified(answer_key, student_answers)
+
+            # Recalculate total_obtained from evaluations to ensure accuracy
+            evals = grading_result.get('evaluations', [])
+            if evals:
+                grading_result['total_obtained'] = sum(e.get('obtained_marks', 0) for e in evals)
+                grading_result['total_max'] = sum(e.get('max_marks', 0) for e in evals)
             
             # Return complete result for this student
             return {
                 "filename": filename,
                 "student_name": student_info.get('student_name', 'Unknown'),
                 "roll_number": student_info.get('roll_number', 'Unknown'),
+                "semester": student_info.get('semester', 'Unknown'),
+                "session": student_info.get('session', 'Unknown'),
+                "semester_type": student_info.get('semester_type', 'Unknown'),
+                "department": student_info.get('department', 'Unknown'),
+                "seat_number": student_info.get('seat_number', 'Unknown'),
+                "course_code": student_info.get('course_code', 'Unknown'),
                 "answers_extracted": len(student_answers),
                 "grading": grading_result,
                 "total_obtained": grading_result.get('total_obtained', 0),
@@ -636,7 +648,7 @@ class CheckingPapersService:
         # =====================================================================
         
         # Start with basic columns
-        headers = ["S.No", "Name", "Roll Number"]
+        headers = ["S.No", "Name", "Roll Number", "Department", "Semester", "Session", "Course Code", "Seat No"]
         
         if not use_per_question_columns:
             # For quiz: Just one column with total marks
@@ -670,12 +682,28 @@ class CheckingPapersService:
             
             # Column 3: Roll number
             ws.cell(row=row_idx, column=3, value=result.get('roll_number', 'Unknown')).border = thin_border
+
+            # Column 4: Department
+            ws.cell(row=row_idx, column=4, value=result.get('department', 'Unknown')).border = thin_border
+
+            # Column 5: Semester
+            sem = result.get('semester', 'Unknown')
+            sem_type = result.get('semester_type', '')
+            ws.cell(row=row_idx, column=5, value=f"{sem} ({sem_type})" if sem_type and sem_type != 'Unknown' else sem).border = thin_border
+
+            # Column 6: Session
+            ws.cell(row=row_idx, column=6, value=result.get('session', 'Unknown')).border = thin_border
+
+            # Column 7: Course Code
+            ws.cell(row=row_idx, column=7, value=result.get('course_code', 'Unknown')).border = thin_border
+
+            # Column 8: Seat Number
+            ws.cell(row=row_idx, column=8, value=result.get('seat_number', 'Unknown')).border = thin_border
             
             # Handle failed processing
             if not result.get('success'):
-                # Show error message
-                ws.cell(row=row_idx, column=4, value=f"Error: {result.get('error', 'Unknown')}").border = thin_border
-                continue  # Skip to next student
+                ws.cell(row=row_idx, column=9, value=f"Error: {result.get('error', 'Unknown')}").border = thin_border
+                continue
             
             # Get grading data
             grading = result.get('grading', {})
@@ -685,13 +713,13 @@ class CheckingPapersService:
             
             if not use_per_question_columns:
                 # QUIZ: Just show total marks in one column
-                cell = ws.cell(row=row_idx, column=4, value=f"{total_obtained} / {total_max}")
+                cell = ws.cell(row=row_idx, column=9, value=f"{total_obtained} / {total_max}")
                 cell.alignment = center_align
                 cell.border = thin_border
             else:
                 # ASSIGNMENT: Show marks for each answer
                 for i, evaluation in enumerate(evaluations):
-                    col_idx = 4 + i  # Start from column 4
+                    col_idx = 9 + i  # Start from column 9
                     obtained = evaluation.get('obtained_marks', 0)
                     max_marks = evaluation.get('max_marks', 0)
                     cell = ws.cell(row=row_idx, column=col_idx, value=f"{obtained}/{max_marks}")
@@ -699,7 +727,7 @@ class CheckingPapersService:
                     cell.border = thin_border
                 
                 # Last column: Total marks
-                total_col = 4 + num_questions
+                total_col = 9 + num_questions
                 cell = ws.cell(row=row_idx, column=total_col, value=f"{total_obtained} / {total_max}")
                 cell.alignment = center_align
                 cell.border = thin_border

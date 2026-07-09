@@ -404,6 +404,112 @@ class DocumentService:
         return zip_buffer.getvalue()
 
     @staticmethod
+    def create_detailed_report_document(checking_results: dict) -> bytes:
+        """
+        Create a detailed Word report for all students showing:
+        - Each student's answer vs correct answer
+        - Marks obtained and why (AI feedback / grading reason)
+        - Overall feedback
+        """
+        log_step("Creating Detailed Report", f"Students: {checking_results.get('total_students', 0)}")
+
+        doc = Document()
+
+        title = doc.add_heading("Detailed Grading Report", 0)
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        info = checking_results.get("answer_key_info", {})
+        doc.add_paragraph(
+            f"Assessment Type: {checking_results.get('assessment_type', 'N/A')}  |  "
+            f"Total Questions: {info.get('total_questions', 'N/A')}  |  "
+            f"Total Marks: {info.get('total_marks', 'N/A')}"
+        )
+        doc.add_paragraph(
+            f"Students Processed: {checking_results.get('total_students', 0)}  |  "
+            f"Successful: {checking_results.get('successful', 0)}  |  "
+            f"Failed: {checking_results.get('failed', 0)}"
+        )
+        doc.add_paragraph("")
+
+        results = checking_results.get("results", [])
+        for idx, student in enumerate(results, 1):
+            doc.add_heading(
+                f"{idx}. {student.get('student_name', 'Unknown')}  "
+                f"(Roll: {student.get('roll_number', 'N/A')})",
+                level=1,
+            )
+
+            if not student.get("success"):
+                doc.add_paragraph(f"Error: {student.get('error', 'Processing failed')}")
+                doc.add_page_break()
+                continue
+
+            grading = student.get("grading", {})
+            total_obtained = grading.get("total_obtained", student.get("total_obtained", 0))
+            total_max = grading.get("total_max", student.get("total_max", 0))
+
+            summary = doc.add_paragraph()
+            summary.add_run(f"Total Score: {total_obtained} / {total_max}").bold = True
+
+            overall = grading.get("overall_feedback", "")
+            if overall:
+                fb = doc.add_paragraph()
+                fb.add_run("Overall Feedback: ").bold = True
+                fb.add_run(overall)
+
+            doc.add_paragraph("")
+
+            evaluations = grading.get("evaluations", [])
+            for ev in evaluations:
+                q_num = ev.get("question_number", ev.get("question_id", "?"))
+                q_type = ev.get("question_type", "")
+                max_m = ev.get("max_marks", 0)
+                got_m = ev.get("obtained_marks", 0)
+                correct = ev.get("correct_answer", "N/A")
+                student_ans = ev.get("student_answer", "N/A")
+                feedback = ev.get("feedback", "")
+                is_correct = ev.get("is_correct")
+
+                # Question header
+                q_heading = doc.add_paragraph()
+                label = f"Q{q_num}"
+                if q_type:
+                    label += f" [{q_type}]"
+                mark_label = f"  —  {got_m}/{max_m} marks"
+                if is_correct is True:
+                    mark_label += "  ✓"
+                elif is_correct is False:
+                    mark_label += "  ✗"
+                q_heading.add_run(label).bold = True
+                q_heading.add_run(mark_label)
+
+                # Student answer
+                sa = doc.add_paragraph()
+                sa.add_run("Student Answer:  ").bold = True
+                sa.add_run(str(student_ans))
+
+                # Correct answer
+                ca = doc.add_paragraph()
+                ca.add_run("Correct Answer:  ").bold = True
+                ca.add_run(str(correct))
+
+                # Grading reason / feedback
+                if feedback:
+                    fb_para = doc.add_paragraph()
+                    fb_para.add_run("Grading Reason:  ").bold = True
+                    fb_para.add_run(feedback)
+
+                doc.add_paragraph("─" * 60)
+
+            doc.add_page_break()
+
+        buffer = io.BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        log_success("Detailed report created")
+        return buffer.getvalue()
+
+    @staticmethod
     def create_slides_document(
         deck_title: str,
         slides: List[Dict],

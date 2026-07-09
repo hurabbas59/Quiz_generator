@@ -62,7 +62,7 @@ class GenerationService:
     
     def _get_content(self, query: str = None, k: int = 10) -> str:
         """Retrieve content from vector DB."""
-        search_query = "Generate Questions Covering these topics: " + query or "Generate questions covering all topics"
+        search_query = f"Generate Questions Covering these topics: {query}" if query else "Generate questions covering all topics"
         log_debug(f"Retrieving content with query: {search_query}")
         
         docs = self.vector_db.similarity_search(
